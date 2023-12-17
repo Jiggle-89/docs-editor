@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "^5.2.6",
     "@mdxeditor/editor": "^1.10.0",
     "@octokit/rest": "^20.0.2",
     "antd": "^5.11.5",
-    "aws-sdk": "^2.1513.0",
     "firebase": "^10.6.0",
     "isomorphic-fetch": "^3.0.0",
     "match-sorter": "^6.3.1",

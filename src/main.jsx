@@ -7,6 +7,8 @@ import {
 import App from './App.jsx'
 import EditFile from './EditFile.jsx'
 import ErrorPage from './routes/error-page.jsx';
+import HomePage from './HomePage.jsx'
+import NewPage from './NewPage.jsx';
 import './index.css'
 
 
@@ -15,13 +17,17 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      // {
-      //   index: true,
-      //   element: <App />,
-      // },
+      {
+        index: true,
+        element: <HomePage />,
+      },
       {
         path: ":name", // match any route that starts with the file path, and its following children
         element: <EditFile />,
+      },
+      {
+        path: '/create',
+        element: <NewPage />,
       }
     ],
 
