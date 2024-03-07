@@ -1,77 +1,111 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext, useRef } from 'react'
+
+import { observer } from 'mobx-react';
+import { MobXProviderContext } from 'mobx-react'
 import './index.css'
 import './mdxeditor.css'
-import '@mdxeditor/editor/style.css'
-import { MDXEditor } from '@mdxeditor/editor/MDXEditor'
-import { UndoRedo } from '@mdxeditor/editor/plugins/toolbar/components/UndoRedo'
-import { BoldItalicUnderlineToggles } from '@mdxeditor/editor/plugins/toolbar/components/BoldItalicUnderlineToggles'
-import { InsertTable } from '@mdxeditor/editor/plugins/toolbar/components/InsertTable'
-import { BlockTypeSelect } from '@mdxeditor/editor/plugins/toolbar/components/BlockTypeSelect'
-import { toolbarPlugin } from '@mdxeditor/editor/plugins/toolbar'
-import { tablePlugin } from '@mdxeditor/editor'
-import { headingsPlugin } from '@mdxeditor/editor/plugins/headings'
-import { listsPlugin } from '@mdxeditor/editor/plugins/lists'
-import { thematicBreakPlugin } from '@mdxeditor/editor'
-import { linkPlugin } from '@mdxeditor/editor/plugins/link'
-import { markdownShortcutPlugin } from '@mdxeditor/editor'
-import { frontmatterPlugin } from '@mdxeditor/editor'
-import { ListsToggle } from '@mdxeditor/editor'
-import {getFirestore, collection, doc, getDoc, setDoc} from 'firebase/firestore'
+import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import app from './firebase'
-import {Button} from 'antd'
-import {useParams} from 'react-router-dom'
-import fetch from 'node-fetch'
+import { Modal, Form, Input} from 'antd'
+import { useParams } from 'react-router-dom'
+import { LoadingOutlined } from '@ant-design/icons'
 
-// ! github personal access token: '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'
-// ? path in firestore is handled like this: pages/path/to/file without .mdx
+import { useNotification } from './NotificationConfig';
+import htmlToJsx from './HtmlToJsx';
+import editorConfig from './EditorConfig';
+import { CKEditor } from '@ckeditor/ckeditor5-react'
+import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic'
+//  path in firestore is handled like this: pages/path/to/file without .mdx extension
 
+function useStores() {
+  return useContext(MobXProviderContext);
+}
 const db = getFirestore(app);
 
-function EditFile() {
+const EditFile = observer(() =>{
+
+  const {store} = useStores()
+
+  const {TextArea} = Input
   
   let {name} = useParams()
+  const [author, setAuthor] = useState(null)
+  const [description, setDescription] = useState(null)
+  const [modalLoading, setModalLoading] = useState(false)
 
-  const [markdown, setMarkdown] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const editorRef = useRef()
 
+
+  const [form] = Form.useForm();
+
+  const {openNotification, openError, contextHolder} = useNotification()
+
+  async function checkDocExists() { // this function validates if there's a document with the same document name in the collections, used for Form
+    const newDocRef = doc(db, "newFiles", name)
+    const newDocSnap = await getDoc(newDocRef);
+    if (newDocSnap.exists()) 
+      return true
+    else
+      return false;
+  }
 
   useEffect(() => {
-    setMarkdown(null);
-    fetchFunc({setMarkdown, name});
+    store.setHtml(null);
+    contentLoader({store,name});
   }, [name])
 
-  if (markdown === null) {
-    return <h1 style={{color: 'black'}}>טוען...</h1>
-  }
-  else {
+  if (store.html === null)
     return (
-      <>
-        <div>
-          <MDXEditor markdown={markdown}
-            plugins={[toolbarPlugin({
-              toolbarContents: () => ( <>  <UndoRedo />  <BlockTypeSelect /> <BoldItalicUnderlineToggles />   <ListsToggle />   <InsertTable />    </>)
-            }),
-
-              tablePlugin(),
-              headingsPlugin(),
-              listsPlugin(),
-              thematicBreakPlugin(),
-              linkPlugin(), 
-              markdownShortcutPlugin(),
-              frontmatterPlugin()
-            ]}
-
-            className="mdxeditor"
-            key={name}
-            onChange={e => setMarkdown(e)}
-          />
-          <Button type="primary" onClick={postChanges} style={{margin: '0 10px 10px 0'}} loading={loading}>שמור</Button>
-        </div>
-      </>
+      <div style={{width:'calc(100vw - 120px)', height: '100vh', display: 'flex', placeItems: 'center', justifyContent: 'center', transition: 'margin-right 0.3'}}>
+        <LoadingOutlined style={{fontSize: '150px'}} />
+      </div>
     )
-  }
+  else
+    return (
+    <>
+      {contextHolder}
+
+      <div style={{width: '1150px', position: 'absolute', top: '0', display: 'flex', justifyContent: 'center'}}>
+        <CKEditor ref={editorRef} config={editorConfig} editor={ClassicEditor} onReady={editor => {editorRef.current = editor;editor.setData(store.html); }}/>
+      </div>
+
+      <Modal width="440px" okButtonProps={{htmlType: 'submit'}} confirmLoading={modalLoading} centered open={store.modalVisible} onOk={postChanges} onCancel={() => store.setModalVisible(false)} >
+        <Form form={form}>
+
+          <Form.Item name="שם עורך" rules={[{ required: true, message: 'אנא הכנס שם עורך' }]} >
+            <Input onChange={(e) => setAuthor(e.target.value)} maxLength="20" placeholder="שם עורך" style={{width: '350px'}} />
+          </Form.Item>
+
+          <Form.Item name="תיאור" rules={[{ required: true, message: 'אנא הכנס תיאור' }]} >
+            <TextArea onChange={(e) => setDescription(e.target.value)} maxLength="120" placeholder="תיאור צורך העריכה" style={{width: '350px', resize: 'none'}} autoSize={{minRows: 3, maxRows: 6}} />
+          </Form.Item>
+
+
+        </Form>
+      </Modal>
+
+    </>
+    )
 
   async function postChanges() {
+
+    setModalLoading(true)
+
+    try {
+      await form.validateFields();
+    }
+
+    catch (error) {
+      setModalLoading(false)
+      return
+    }
+
+    if (await checkDocExists()) { // checking if someone's already sent a document edit suggestion
+      setModalLoading(false)
+      openError('שגיאה', 'הצעה לעריכה בעמוד זה כבר קיימת במערכת')
+      return
+    }
+
     const filesCollection = collection(db, 'files');
     const docRef = doc(filesCollection, name);
     const docSnap = await getDoc(docRef);
@@ -81,35 +115,45 @@ function EditFile() {
 
     const data = docSnap.data();
 
-    setLoading(true);
-
+    const htmlData = editorRef.current.getData();
+    const jsxData = htmlToJsx(htmlData);
 
     try {
       await setDoc(newDocRef, {
-        path: data.path,
+        dirPath: data.path,
         HE: data.HE,
         name: data.name,
-        content: markdown,
-        status: 'editing'
+        content: jsxData,
+        html: htmlData,
+        status: 'editing',
+        description: description,
+        author: author,
+        timestamp: serverTimestamp()
       })
+      store.setModalVisible(false)
+      console.log('done uploading to firebase')
+      openNotification('התהליך הושלם!', 'הקובץ נערך בהצלחה וממתין לאישור')
     }
     catch(error) {
-      console.log(error)
+      console.log('error uploading content to firebase:', error)
+      openError('שגיאה', 'אירעה שגיאה בעת העלאת הקובץ לשרת')
     }
     finally {
-      setLoading(false);
+      setModalLoading(false)
     }
   }
-}
 
-async function fetchFunc({setMarkdown, name}) {
+  
+}) // ! end of function
+
+async function contentLoader({store,name}) { // this function uses fetchPath to fetch the data from the database and then sets the jsx state to the content of the file for initial load
 
   const data = await fetchPath({name})
 
-  setMarkdown(escapeHtmlAndJsxTags(data.content));
+  store.setHtml(data.html)
 }
 
-async function fetchPath({name}) {
+async function fetchPath({name}) { // this function fetches the data from firebase according to name variable (that is the :name parameter url and the page name)
   const filesCollection = collection(db, 'files');
 
   const docRef = doc(filesCollection, name);
@@ -118,13 +162,7 @@ async function fetchPath({name}) {
   return data;
 }
 
-function escapeHtmlAndJsxTags(str) {
-  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
 export default EditFile
-
-
 
 
 
@@ -138,7 +176,7 @@ export default EditFile
 //     headers: {
 //       'Content-Type': 'application/json',
 //     },
-//     body: JSON.stringify({ markdown, path }),
+//     body: JSON.stringify({ jsx, path }),
 //   })
 //   .then(response => response.json())
 //   .then(data => console.log(data))

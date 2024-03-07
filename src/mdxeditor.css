@@ -1,12 +1,50 @@
-.mdxeditor {
-  direction: rtl !important;
-  text-align: right !important;
-  top: 0%;
-  width: 80vw;
-  height: 100vh;
-  white-space: pre-line !important;
+html body {
+  overflow: hidden;
 }
-._toolbarRoot_1xgxv_143 {
-  direction: rtl !important;
-  position:sticky !important;
+.ck.ck-toolbar {
+  margin-bottom: 4vh !important;
+}
+
+.ck-content {
+  padding-right: 20px !important;
+  padding-bottom: 30px !important;
+}
+.ck-editor__editable_inline:not(.ck-comment__input *) {
+  position: absolute;
+  width: 100%;
+  max-width: 1100px;
+  height: 90vh;
+  border-radius: 10px !important;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1) !important;
+}
+
+
+.ant-input-number-input {
+  text-align: start !important;
+  direction: ltr !important;
+}
+.ant-tabs-nav-wrap {
+  padding-right: 32px;
+  padding-left: 32px;
+}
+.ant-tabs-tab {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+.ant-float-btn {
+  height: 60px;
+  width: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.ant-float-btn-content {
+  padding-left: 10px !important;
+}
+.ant-float-btn-icon {
+  font-size: 1.5rem !important;
+}
+.ck-content ol ol:not(ol ol ol, ol ol ol ol, ol ol ol ol ol) {
+  list-style-type: hebrew !important;
 }
