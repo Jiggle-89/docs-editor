@@ -1,16 +1,16 @@
+import {React} from 'react'
 import {auth} from './firebase'
-import React from 'react'
 import {onAuthStateChanged} from 'firebase/auth'
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Layout, Menu } from "antd";
-import {getFirestore ,collection,getDocs} from 'firebase/firestore'
+import {getFirestore ,collection,getDocs, doc, getDoc} from 'firebase/firestore'
 import app from './firebase'
 import {useEffect ,useState, useContext, useRef} from 'react'
 import FetchData from './FetchData';
 import savedPages from './SavedPages';
 import LoginModal from './LoginModal';
 import { LoadingOutlined, FileOutlined, SearchOutlined, UserOutlined, LogoutOutlined, SaveOutlined, UploadOutlined } from "@ant-design/icons";
-import { Input, Empty, FloatButton,Tabs} from 'antd'
+import { Input, Empty, FloatButton, Tabs, Tour } from 'antd'
 import documentation from './assets/documentation.png'
 import { MobXProviderContext } from 'mobx-react';
 
@@ -21,6 +21,7 @@ function useStores() {
 const db = getFirestore(app)
 
 function App() {
+  const navigate = useNavigate();
   const {Sider, Content} = Layout
   const [siderPages, setSiderPages] = useState(null);
   const [filtered, setFiltered] = useState(null); // this is the filtered list of pages that will be displayed in the sider menu after search
@@ -33,6 +34,10 @@ function App() {
   const [tabKey, setTabKey] = useState('1');
   const [cachedPages, setCachedPages] = useState(null);
   const unsubscribeRef = useRef(null);
+
+  const homeRef = useRef(null);
+  const tabsRef = useRef(null);
+  const searchRef = useRef(null);
 
 
   const {store} = useStores()
@@ -54,7 +59,6 @@ function App() {
       }
     };
   }, [signedIn])
-  
 
   useEffect(() => {
     if (siderPages) {
@@ -95,8 +99,10 @@ function App() {
 
   const layoutStyle = {
     marginRight: collapsed ?  '90px' : '350px',
-    transition: 'margin-right 0.3s',
-    caretColor: 'black !important'
+    transition: 'margin-right 0.3s linear',
+    caretColor: 'black !important',
+    width: collapsed ? 'calc( 100vw - 90px )' : 'calc( 100vw - 350px )',
+    height: '100vh',
   }
 
   const searchBoxStyle = {
@@ -106,6 +112,28 @@ function App() {
     width: collapsed ? '80px' :'350px',
     zIndex: 1000,
     display: tabKey === '1' ? 'block' : 'none', // conditionally render the search box if it's on tab 1
+  }
+
+  const titleContainerStyle = {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: '15px',
+    marginBottom: '15px',
+  }
+
+  const titleStyle = {
+    opacity: collapsed ? 0 : 1,
+    transition: 'opacity 0.1s ease-in-out',
+    fontSize: '1.4rem',
+    marginRight: '50px',
+    whiteSpace: 'nowrap',
+  }
+
+  const imageStyle = {
+    width: '50px',
+    marginRight: '15px',
+    cursor: 'pointer',
   }
 
   const searchItems = [
@@ -181,23 +209,45 @@ function App() {
     }
   ]
 
+  const tourSteps = [
+    {
+      title: 'חזרה לדף בית',
+      description: 'לחץ על האייקון כדי לחזור לדף הבית',
+      target: () => homeRef.current,
+    },
+    {
+      title: 'החלפת תצוגה',
+      description: 'לחץ כדי להחליף בין עמודי הלומדה לעמודי השמירה שלך',
+      target: () => tabsRef.current,
+    },
+    {
+      title: 'חיפוש',
+      description: 'השתמש בחיפוש כדי למצוא עמוד במהירות',
+      target: () => searchRef.current,
+    }
+  ]
+
   return (
     <>
       <Layout>
 
+        <Tour steps={tourSteps} open={store.showTour} onRequestClose={() => store.setShowTour(false)} />
+
         <Sider onCollapse={(value) => setCollapsed(value)} collapsible reverseArrow collapsed={collapsed} style={siderStyle} width='350px' theme="light">
 
-          <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', marginTop: '15px', marginBottom: '15px'}}>
-            <img src={documentation} alt="documentation" style={{width: '50px', marginRight: '15px'}} />
-            
-            <div style={{ opacity: collapsed ? 0 : 1, transition: 'opacity 0.1s ease-in-out', fontSize: '1.4rem', marginRight: '50px', whiteSpace: 'nowrap'}}>
+          <div style={titleContainerStyle}>
+            <img ref={homeRef} src={documentation} alt="documentation" style={imageStyle} onClick={() => navigate('/')}  />
+
+            <div style={titleStyle}>
               עריכת עמודים
             </div>
           </div>
 
-          <Tabs items={tabItems} defaultActiveKey='1' onChange={(key) => setTabKey(key)} />
+          <div ref={tabsRef}>
+            <Tabs items={tabItems} defaultActiveKey='1' onChange={(key) => setTabKey(key)} />
+          </div>
           
-          <Menu onClick={() => setCollapsed(false)} theme="light" items={searchItems} mode="inline" style={searchBoxStyle} selectable={false} />
+          <Menu ref={searchRef} onClick={() => setCollapsed(false)} theme="light" items={searchItems} mode="inline" style={searchBoxStyle} selectable={false} />
 
         </Sider>
 
@@ -264,10 +314,11 @@ function App() {
   }
 
   function isSignedIn() {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         setSignedIn(true)
         console.log('signed in: ' + user.phoneNumber)
+        console.log('admin: ' + await isAdmin())
       }
       else {
         setSignedIn(false)
@@ -276,9 +327,22 @@ function App() {
     });
   }
 
+  async function isAdmin() { // check if current user is admin, by reading his own document in the users collection
+
+    if (!auth.currentUser) {
+      return false;
+    }
+    const usersCollection = collection(db, "users");
+    const userDoc = doc(usersCollection, auth.currentUser.uid);
+    const userDocSnap = await getDoc(userDoc);
+    const data = userDocSnap.data();
+    return data.isAdmin;
+  }
+
   async function signOut(e) {
 
     await auth.signOut();
+    navigate('/');
     
     setSignedIn(false)
     

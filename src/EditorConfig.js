@@ -8,7 +8,7 @@ import { Font } from '@ckeditor/ckeditor5-font';
 import { List } from '@ckeditor/ckeditor5-list';
 import { ListProperties } from '@ckeditor/ckeditor5-list'
 import SourceEditing from '@ckeditor/ckeditor5-source-editing/src/sourceediting';
-import { Base64UploadAdapter } from '@ckeditor/ckeditor5-upload';
+import { SimpleUploadAdapter } from '@ckeditor/ckeditor5-upload';
 import { Image, ImageCaption, ImageResize, ImageStyle, ImageToolbar } from '@ckeditor/ckeditor5-image';
 import { LinkImage } from '@ckeditor/ckeditor5-link'
 import { ImageInsert } from '@ckeditor/ckeditor5-image'
@@ -29,8 +29,8 @@ import {
 const editorConfig =  {
   // protect line breaks from being parsed
   protectedSource: [/\n/g, /<\?[\s\S]*?\?>/g],
-  plugins: [Essentials,Table, TextPartLanguage, PasteFromOffice, TableToolbar, TableCaption, TableCellProperties, TableColumnResize,TableProperties, Clipboard, FindAndReplace, Image, LinkImage, ImageInsert, ImageCaption, ImageResize, ImageStyle, ImageToolbar, Base64UploadAdapter, SourceEditing, List, ListProperties, Paragraph, Alignment, Bold, Italic, Underline, Strikethrough,Subscript, Superscript, Autoformat, Heading, Font],
-  // language: {textPartLanguage:[{title: 'Hebrew', languageCode: 'he'}], ui: 'he', content: 'he'},
+  plugins: [Essentials,Table, SimpleUploadAdapter, TextPartLanguage, PasteFromOffice, TableToolbar, Clipboard, TableCaption, TableCellProperties, TableColumnResize,TableProperties, FindAndReplace, Image, LinkImage, ImageInsert, ImageCaption, ImageResize, ImageStyle, ImageToolbar, SourceEditing, List, ListProperties, Paragraph, Alignment, Bold, Italic, Underline, Strikethrough,Subscript, Superscript, Autoformat, Heading, Font],
+  language: {textPartLanguage:[{title: 'עברית', languageCode: 'he'}], ui: 'he', content: 'he'},
   toolbar: {
     items: [
       'undo',
@@ -55,7 +55,8 @@ const editorConfig =  {
       'insertImage',
       'insertTable',
       '|',
-      'findAndReplace'
+      'findAndReplace',
+      'textPartLanguage'
     ],
     shouldNotGroupWhenFull: true
   },
@@ -148,6 +149,7 @@ const editorConfig =  {
         alignment: 'center',
       }
     },
+
     // tableCellProperties: {S
     //   defaultProperties: {
     //     horizontalAlignment: 'center', 
@@ -156,7 +158,12 @@ const editorConfig =  {
     //   }
     // }
   },
-  language: 'he'
+  simpleUpload: {
+    uploadUrl: 'https://git-api-push.vercel.app/uploadimage'
+  }
+  // language: 'he',
+  // create a class for the editor
+  
 }
 
 export default editorConfig

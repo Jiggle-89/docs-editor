@@ -14,10 +14,18 @@ export default defineConfig({
     })
 
   ],
+  optimizeDeps: {
+    include: ['@workspace/ckeditor5-custom-build'],
+  },
   rollupOptions: {
     preserveModules: true,
   },
   define: {
     global: {}
   },
+  build: {
+    commonjsOptions: {
+      include: [/@workspace\/ckeditor5-custom-build/, /node_modules/],
+    }
+  }
 })

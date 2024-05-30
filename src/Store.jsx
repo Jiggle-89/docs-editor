@@ -1,8 +1,4 @@
-import { makeAutoObservable, observable, computed, action } from "mobx";
-import htmlToJsx from "./HtmlToJsx";
-import { ButtonView } from "ckeditor5/src/ui";
-import { observer } from "mobx-react";
-import { useContext } from "react";
+import { makeAutoObservable} from "mobx";
 
 class Store {
   
@@ -13,7 +9,7 @@ class Store {
   tree = null;
   treeLoad = false;
   saveModal = false;
-  deleteNotification = false;
+  showTour = false;  
 
   constructor() {
     makeAutoObservable(this);
@@ -47,11 +43,13 @@ class Store {
     this.saveModal = value;
   }
 
-  // !
-  // !
-  // !
+  setShowTour = (value) => {
+    this.showTour = value;
+  }
 
-
+  // !
+  // !
+  // !
 
 }
 

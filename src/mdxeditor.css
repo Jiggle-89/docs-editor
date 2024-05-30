@@ -18,6 +18,11 @@ html body {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1) !important;
 }
 
+.ck {
+  outline: none !important;
+  border: none !important;
+}
+
 
 .ant-input-number-input {
   text-align: start !important;

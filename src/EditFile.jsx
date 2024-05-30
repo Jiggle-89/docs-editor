@@ -16,7 +16,6 @@ import editorConfig from './EditorConfig';
 import { CKEditor } from '@ckeditor/ckeditor5-react'
 import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic'
 //  path in firestore is handled like this: pages/path/to/file without .mdx extension
-
 function useStores() {
   return useContext(MobXProviderContext);
 }

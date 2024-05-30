@@ -4,6 +4,7 @@ import { createBrowserRouter,RouterProvider} from "react-router-dom";
 import { Provider } from 'mobx-react';
 import Store from './Store.jsx';
 import App from './App.jsx'
+import Admin from './Admin.jsx'
 import EditFile from './EditFile.jsx'
 import EditSaved from './EditSaved.jsx'
 import ErrorPage from './routes/error-page.jsx'
@@ -12,6 +13,7 @@ import NewPage from './NewPage.jsx'
 import heIL from 'antd/locale/he_IL'
 import {ConfigProvider} from 'antd'
 import './index.css'
+
 const store = new Store();
 
 const router = createBrowserRouter([
@@ -44,8 +46,13 @@ const router = createBrowserRouter([
       {
         path: '/create',
         element: <NewPage />,
+      },
+      {
+        path: '/admin',
+        element: <Admin />,
       }
     ],
+
 
     errorElement: <ErrorPage />,
   },

@@ -7,11 +7,11 @@ import { observer } from 'mobx-react';
 import { MobXProviderContext } from 'mobx-react'
 import './index.css'
 import './mdxeditor.css'
-import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore'
+import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore'
 import app from './firebase'
 import { Form, Input, TreeSelect, Modal, Checkbox, Spin, FloatButton} from 'antd'
 import { useParams } from 'react-router-dom'
-import { LoadingOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons'
+import { LoadingOutlined, DeleteOutlined } from '@ant-design/icons'
 import { checkHeExists, checkDocExists } from './Checks'
 import postToGit from './PostToGit'
 
@@ -141,7 +141,7 @@ const EditSaved = observer(() =>{
 
         </Modal>
 
-        <FloatButton onClick={deletePage} style={{marginLeft: '20px', bottom: '120px'}} icon={<DeleteOutlined style={{fontSize: '24px'}} />} />
+        <FloatButton onClick={deletePage} style={{marginLeft: '20px', bottom: '125px'}} icon={<DeleteOutlined style={{fontSize: '24px'}} />} />
 
       </>
     )
@@ -225,7 +225,6 @@ const EditSaved = observer(() =>{
     catch (error) {
       openError('שגיאה', 'שגיאה במחיקת העמוד')
     }
-
 
   }
 

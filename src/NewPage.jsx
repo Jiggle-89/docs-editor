@@ -1,8 +1,9 @@
 import {useRef, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
 import React from 'react'
 import './index.css'
 import './mdxeditor.css'
-import {getFirestore, collection, doc, setDoc, serverTimestamp} from 'firebase/firestore'
+import {getFirestore, collection, doc, setDoc} from 'firebase/firestore'
 import app from './firebase'
 import { auth } from './firebase'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -30,6 +31,7 @@ function useStores() {
 const NewPage = observer(() =>{
 
   const {store} = useStores()
+  const navigate = useNavigate()
 
   const [heText, setHeText] = useState('') // HE name of the new page
   const [enText, setEnText] = useState('') // EN name of the new page [for the title of the page and the directory path in git
@@ -47,6 +49,243 @@ const NewPage = observer(() =>{
   const [form] = Form.useForm(); // form reference in modal for validations
 
   const {TextArea} = Input
+
+  const exampleData = `
+  <p>
+    <span style="font-size:28px;">תהליך העריכה בעורך:</span>
+  </p>
+  <h1>
+    כותרת גדולה
+  </h1>
+  <h2>
+    כותרת 2
+  </h2>
+  <h3>
+    כותרת 3
+  </h3>
+  <h4>
+    כותרת 4
+  </h4>
+  <p>
+    &nbsp;
+  </p>
+  <ul>
+    <li>
+        עיצובים (כמו מירקור, שינוי צבע וכדומה) על כותרות אלו יידרסו מאחר ומטרת הכותרות הוא לספר לאתר שאלו נושאים מרכזיים בדף ולכן עיצובים שנעשים עליהם כאן בעורך לא יישקפו באתר הלומדה.
+        <ul>
+            <li>
+                &nbsp;בעמוד <a href="https://toardocs.vercel.app/tkina/tkinatoarp/toarp">הבא</a> תוכלו לראות שהכותרות נמצאות בתוכן העניינים משמאל למעלה וניתן ללחוץ עליו כדי לקפוץ לכל נושא,
+            </li>
+            <li>
+                &nbsp;גודל הכותרת משפיע על היבלטות הכותרת בתוכן העניינים לדוג' בקישור המצורף "דגשים חשובים" הינה כותרת יותר קטנה ולכן פחות מודגשת ומוזחת (נמצאת תחת אובייקטים במערכת)
+            </li>
+        </ul>
+    </li>
+    <li>
+        ניתן להשתמש בכותרות בצורות הבאות:&nbsp;
+        <ol>
+            <li>
+                &nbsp;קיצור הסולמיות: &nbsp;כמות הסולמיות תגדיר את גודל הכותרת וחשיבותה למשל נסו לרשום כאן למטה "<u>### כותרת 3"</u>
+            </li>
+            <li>
+                לחיצה על דרוף דאון איפה שרשום "פסקה" ולבחור את הכותרת הרצויה
+            </li>
+        </ol>
+    </li>
+    <li>
+        הכותרת הכי קטנה שניתן ליצור הינה כותרת 4
+    </li>
+  </ul>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <h2>
+    דרכי עיצוב והצגת מידע
+  </h2>
+  <p>
+    &nbsp;
+  </p>
+  <ol>
+    <li>
+        רשימה
+    </li>
+    <li>
+        ממוספרת
+        <ol>
+            <li>
+                ומסוגלת
+            </li>
+            <li>
+                להיות
+            </li>
+            <li>
+                מקוננת (רשימה בתוך רשימה)
+            </li>
+        </ol>
+    </li>
+  </ol>
+  <ul>
+    <li>
+        רשימת בולטים (נקודות)
+    </li>
+    <li>
+        להצגת מידע
+        <ul>
+            <li>
+                שאינו צריך להיות ממוספר
+            </li>
+        </ul>
+    </li>
+  </ul>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    את הרשימות ניתן ליצור באמצעות התחלתן, לדוג' אם נתחיל לרשום 1. או כוכבית (*) תיווצר לנו רשימה ממוספרת/בולטים בהתאמה או באמצעות בחירתן מהבר העליון
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <h3>
+    עיצוב פשוט
+  </h3>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    <span style="background-color:hsl(60,100%,50%);">מרקרים</span>
+  </p>
+  <p>
+    <span style="color:hsl(120,75%,60%);">צבע טקסט</span>
+  </p>
+  <p>
+    <span style="font-size:22px;">גודל טקסט</span>
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <h2>
+    קיצורים שימושיים
+  </h2>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    <strong>טקסט בולט (בולד) </strong>CTRL+B
+  </p>
+  <p>
+    <u>טקסט עם קו תחתון</u> CTRL+U
+  </p>
+  <p>
+    <i>טקסט נוטה (איטלקי)</i> CTRL+i
+  </p>
+  <p>
+    <s>טקסט מחוק</s> CTRL+SHIFT+X
+  </p>
+  <p>
+    <br>
+    <a href="https://toardocs.vercel.app">היפר קישור</a> CTRL+K<br>
+    <br>
+    ניתן למצוא ולהחליף מילים באמצעות CTRL+F
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <figure class="table">
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <th>
+                    יפה
+                </th>
+                <th>
+                    מאוד
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <td>
+                    יפה
+                </td>
+                <td>
+                    מאוד
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <td>
+                    יפה
+                </td>
+                <td>
+                    מאוד
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <td>
+                    יפה
+                </td>
+                <td>
+                    מאוד
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <td>
+                    יפה
+                </td>
+                <td>
+                    מאוד
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    טבלה
+                </th>
+                <td>
+                    יפה
+                </td>
+                <td>
+                    מאוד
+                </td>
+            </tr>
+        </tbody>
+    </table>
+  </figure>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <p>
+    ניתן לצרף תמונות באמצעות היפר קישור ע"י לחיצת כפתור התמונה למעלה, או לצרף קובץ מקומי מהמחשב:
+  </p>
+  <p>
+    &nbsp;
+  </p>
+  <figure class="image">
+    <img style="aspect-ratio:104/142;" src="https://www.w3schools.com/images/w3schools_green.jpg" width="104" height="142">
+  </figure>`
 
 
   // async function postChanges() { // todo: this function executes when modal ok button is pressed to publish changes to firebase, actual function that pushes to admin screen watching
@@ -121,10 +360,12 @@ const NewPage = observer(() =>{
       })
       store.setSaveModal(false);
       openNotification('התהליך הושלם!', 'הקובץ נשמר בשבילך בהצלחה')
+      navigate(`/edit-saved/${enText}`)
     }
 
     catch (error) {
       console.log('error', error)
+      openError('שגיאה בשמירת הקובץ', 'אנא נסה שוב מאוחר יותר')
     }
 
     finally {
@@ -139,8 +380,8 @@ const NewPage = observer(() =>{
       {contextHolder} {/* this is for the notification component */}
       {store.treeLoad ? <Spin indicator={<LoadingOutlined style={{fontSize: '100px'}} spin />} fullscreen></Spin> : null}
 
-      <div style={{width: '1150px', position: 'absolute', top: '0', display: 'flex', justifyContent: 'center'}}>
-        <CKEditor data={'<h1>דף חדש</h1>'} config={editorConfig} editor={ClassicEditor} ref={editorRef} onReady={editor => editorRef.current = editor}  />
+      <div style={{display: 'flex', justifyContent: 'center'}}>
+        <CKEditor data={exampleData} config={editorConfig} editor={ClassicEditor} ref={editorRef} onReady={editor => editorRef.current = editor}  />
       </div>
 
       <Modal width="440px" okButtonProps={{htmlType: 'submit'}} confirmLoading={modalLoading} centered open={store.modalVisible} onOk={postChanges} onCancel={() => store.setModalVisible(false)}>

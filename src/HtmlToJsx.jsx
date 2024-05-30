@@ -30,6 +30,9 @@ function htmlToJsx(htmlString) {
   jsxString = jsxString.replace(/colspan/g, 'colSpan');
   jsxString = jsxString.replace(/br/g, 'br /');
 
+  // change black #000000 to white color on style attribute
+  jsxString = jsxString.replace(/color: "#000000"/g, 'color: "rgb(226,232,240)"');
+
   // Convert headings to Markdown format (like strong italicize strikethrough etc)
   for (let i = 1; i <= 6; i++) {
     // eslint-disable-next-line no-useless-escape 

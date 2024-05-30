@@ -1,0 +1,11 @@
+.diffins {
+  color: green;
+}
+
+.diffdel {
+  color: red;
+}
+
+.diffmod {
+  color: orange;
+}
