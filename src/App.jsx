@@ -1,7 +1,7 @@
 import {React} from 'react'
 import {auth} from './firebase'
 import {onAuthStateChanged} from 'firebase/auth'
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Layout, Menu } from "antd";
 import {getFirestore ,collection,getDocs, doc, getDoc} from 'firebase/firestore'
 import app from './firebase'
@@ -21,6 +21,7 @@ function useStores() {
 const db = getFirestore(app)
 
 function App() {
+  const location = useLocation();
   const navigate = useNavigate();
   const {Sider, Content} = Layout
   const [siderPages, setSiderPages] = useState(null);
@@ -349,7 +350,7 @@ function App() {
   }
 
   async function uploadModal() {
-    await FetchData({store}); // fetch the data, send the store cuz it can't be used there
+    if (location.pathname.includes('create')) await FetchData({store}); // fetch the data, send the store cuz it can't be used there
     store.setModalVisible(true);
   }
 

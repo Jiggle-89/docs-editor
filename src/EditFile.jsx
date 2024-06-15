@@ -6,6 +6,7 @@ import './index.css'
 import './mdxeditor.css'
 import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import app from './firebase'
+import postToGit from './PostToGit'
 import { Modal, Form, Input} from 'antd'
 import { useParams } from 'react-router-dom'
 import { LoadingOutlined } from '@ant-design/icons'
@@ -105,41 +106,75 @@ const EditFile = observer(() =>{
       return
     }
 
-    const filesCollection = collection(db, 'files');
-    const docRef = doc(filesCollection, name);
-    const docSnap = await getDoc(docRef);
+    let data;
 
-    const newFilesCollection = collection(db, 'newFiles');
-    const newDocRef = doc(newFilesCollection, name);
+    try {
+      const filesCollection = collection(db, 'files');
+      const docRef = doc(filesCollection, name);
+      const docSnap = await getDoc(docRef);
 
-    const data = docSnap.data();
+      data = docSnap.data()
+    }
+
+    catch (error) {
+      setModalLoading(false)
+      openError('שגיאה', 'לא ניתן לשלוף את נתוני הקובץ, נסה שוב מאוחר יותר')
+      return
+    }
 
     const htmlData = editorRef.current.getData();
     const jsxData = htmlToJsx(htmlData);
+    const newFilePath = data.path
 
-    try {
-      await setDoc(newDocRef, {
-        dirPath: data.path,
-        HE: data.HE,
-        name: data.name,
-        content: jsxData,
-        html: htmlData,
-        status: 'editing',
-        description: description,
-        author: author,
-        timestamp: serverTimestamp()
-      })
-      store.setModalVisible(false)
-      console.log('done uploading to firebase')
-      openNotification('התהליך הושלם!', 'הקובץ נערך בהצלחה וממתין לאישור')
+    try { // validate form
+      await form.validateFields();
     }
-    catch(error) {
-      console.log('error uploading content to firebase:', error)
-      openError('שגיאה', 'אירעה שגיאה בעת העלאת הקובץ לשרת')
+    catch (error) {
+      setModalLoading(false);
+      return;
     }
-    finally {
-      setModalLoading(false)
-    }
+
+    await postToGit(jsxData, htmlData, newFilePath, data.name, data.HE, author, description, false, setModalLoading, store, false)
+
+
+
+
+  
+  //   const filesCollection = collection(db, 'files');
+  //   const docRef = doc(filesCollection, name);
+  //   const docSnap = await getDoc(docRef);
+
+  //   const newFilesCollection = collection(db, 'newFiles');
+  //   const newDocRef = doc(newFilesCollection, name);
+
+  //   const data = docSnap.data();
+
+  //   const htmlData = editorRef.current.getData();
+  //   const jsxData = htmlToJsx(htmlData);
+
+  //   try {
+  //     await setDoc(newDocRef, {
+  //       dirPath: data.path,
+  //       HE: data.HE,
+  //       name: data.name,
+  //       content: jsxData,
+  //       html: htmlData,
+  //       status: 'editing',
+  //       description: description,
+  //       author: author,
+  //       timestamp: serverTimestamp()
+  //     })
+  //     store.setModalVisible(false)
+  //     console.log('done uploading to firebase')
+  //     openNotification('התהליך הושלם!', 'הקובץ נערך בהצלחה וממתין לאישור')
+  //   }
+  //   catch(error) {
+  //     console.log('error uploading content to firebase:', error)
+  //     openError('שגיאה', 'אירעה שגיאה בעת העלאת הקובץ לשרת')
+  //   }
+  //   finally {
+  //     setModalLoading(false)
+  //   }
   }
 
   

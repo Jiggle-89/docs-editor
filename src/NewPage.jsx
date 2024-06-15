@@ -467,7 +467,7 @@ const NewPage = observer(() =>{
       return;
     }
 
-    await postToGit(jsxData, htmlData, newFilePath, name, heText, author, description, createFolder, setModalLoading, store)
+    await postToGit(jsxData, htmlData, newFilePath, name, heText, author, description, createFolder, setModalLoading, store, true)
 
   }
   
