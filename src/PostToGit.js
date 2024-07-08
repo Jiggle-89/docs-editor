@@ -54,7 +54,7 @@ const postToGit =  async(jsxData, htmlData, newFilePath, name, heText, author, d
   }
   catch (error) {
     console.error('Error:', error);
-    if (isNew) await deleteDoc(doc(collection(db, "files"), name)); // delete the file from firebase if error in git
+    // if (isNew) await deleteDoc(doc(collection(db, "files"), name)); // delete the file from firebase if error in git
     notification.error({ // can't use hooks so using manually
       message: 'שגיאה בהעלאת הקובץ',
       description: 'אנא נסה שוב מאוחר יותר',

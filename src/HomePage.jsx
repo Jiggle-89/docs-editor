@@ -16,6 +16,7 @@ function HomePage() {
   const showTour = () => {
     store.setCollapsed(false)
     store.setShowTour(true)
+    navigate('/')
     console.log(store.showTour)
   }
 

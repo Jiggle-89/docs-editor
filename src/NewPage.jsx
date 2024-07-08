@@ -466,7 +466,6 @@ const NewPage = observer(() =>{
       setModalLoading(false);
       return;
     }
-
     await postToGit(jsxData, htmlData, newFilePath, name, heText, author, description, createFolder, setModalLoading, store, true)
 
   }

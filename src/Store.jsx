@@ -9,7 +9,7 @@ class Store {
   tree = null;
   treeLoad = false;
   saveModal = false;
-  showTour = false;  
+  showTour = false; 
 
   constructor() {
     makeAutoObservable(this);

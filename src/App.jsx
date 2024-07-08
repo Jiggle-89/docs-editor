@@ -218,7 +218,7 @@ function App() {
     },
     {
       title: 'החלפת תצוגה',
-      description: 'לחץ כדי להחליף בין עמודי הלומדה לעמודי השמירה שלך',
+      description: 'לחץ כדי להחליף בין עמודי הלומדה לעמודים השמורים שלך',
       target: () => tabsRef.current,
     },
     {
@@ -231,8 +231,6 @@ function App() {
   return (
     <>
       <Layout>
-
-        <Tour steps={tourSteps} open={store.showTour} onRequestClose={() => store.setShowTour(false)} />
 
         <Sider onCollapse={(value) => setCollapsed(value)} collapsible reverseArrow collapsed={collapsed} style={siderStyle} width='350px' theme="light">
 
@@ -248,7 +246,9 @@ function App() {
             <Tabs items={tabItems} defaultActiveKey='1' onChange={(key) => setTabKey(key)} />
           </div>
           
-          <Menu ref={searchRef} onClick={() => setCollapsed(false)} theme="light" items={searchItems} mode="inline" style={searchBoxStyle} selectable={false} />
+          <div ref={searchRef} style={searchBoxStyle}>
+            <Menu onClick={() => setCollapsed(false)} theme="light" items={searchItems} mode="inline" selectable={false} />
+          </div>
 
         </Sider>
 
@@ -279,6 +279,8 @@ function App() {
         }
 
       </Layout>
+
+      <Tour steps={tourSteps} open={store.showTour} onClose={() => store.setShowTour(false)} />
 
     </>
   );
