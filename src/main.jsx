@@ -1,8 +1,12 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { createBrowserRouter,RouterProvider} from "react-router-dom";
-import { Provider } from 'mobx-react';
-import Store from './Store.jsx';
+import {
+  createHashRouter,
+  createBrowserRouter,
+  RouterProvider
+} from 'react-router-dom'
+import { Provider } from 'mobx-react'
+import Store from './Store.jsx'
 import App from './App.jsx'
 import Admin from './Admin.jsx'
 import EditFile from './EditFile.jsx'
@@ -11,52 +15,38 @@ import ErrorPage from './routes/error-page.jsx'
 import HomePage from './HomePage.jsx'
 import NewPage from './NewPage.jsx'
 import heIL from 'antd/locale/he_IL'
-import {ConfigProvider} from 'antd'
+import { ConfigProvider } from 'antd'
 import './index.css'
 
-const store = new Store();
+const store = new Store()
 
-const router = createBrowserRouter([
+const routes = [
   {
-    path: "/",
+    path: '/',
     element: <App />,
     children: [
+      { index: true, element: <HomePage /> },
       {
-        index: true,
-        element: <HomePage />,
+        path: 'edit',
+        children: [{ path: ':name', element: <EditFile /> }]
       },
       {
-        path: "/edit", // match any route that starts with the file path, and its following children
-        children: [
-          {
-            path: ":name",
-            element: <EditFile />,
-          },
-        ],
+        path: 'edit-saved',
+        children: [{ path: ':name', element: <EditSaved /> }]
       },
-      {
-        path: '/edit-saved',
-        children: [
-          {
-            path: ':name',
-            element: <EditSaved />
-          }
-        ]
-      },
-      {
-        path: '/create',
-        element: <NewPage />,
-      },
-      {
-        path: '/admin',
-        element: <Admin />,
-      }
+      { path: 'create', element: <NewPage /> },
+      { path: 'admin', element: <Admin /> }
     ],
+    errorElement: <ErrorPage />
+  }
+]
 
+// Use HashRouter in Electron production, BrowserRouter otherwise
+const isElectron = navigator.userAgent.toLowerCase().includes('electron')
 
-    errorElement: <ErrorPage />,
-  },
-]);
+const router = isElectron
+  ? createHashRouter(routes)
+  : createBrowserRouter(routes)
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

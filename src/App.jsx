@@ -29,7 +29,7 @@ function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState('');
-  const [number, setNumber] = useState(''); // phone number of the user for the login modal
+  const [loginId, setLoginId] = useState(''); // phone number of the user for the login modal
   const [modalOpen, setModalOpen] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [tabKey, setTabKey] = useState('1');
@@ -261,7 +261,7 @@ function App() {
         { !signedIn &&
           <>
             <FloatButton type="primary" onClick={(e) =>  {e.stopPropagation();setModalOpen(true)}} icon={<UserOutlined />} style={{marginLeft: '20px'}} />
-            <LoginModal signedIn={signedIn} modalOpen={modalOpen} setModalOpen={setModalOpen} setNumber={setNumber} number={number} />
+            <LoginModal signedIn={signedIn} modalOpen={modalOpen} setModalOpen={setModalOpen} setLoginId={setLoginId} loginId={loginId} />
           </>
         }
         { signedIn &&
@@ -320,7 +320,6 @@ function App() {
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         setSignedIn(true)
-        console.log('signed in: ' + user.phoneNumber)
         console.log('admin: ' + await isAdmin())
       }
       else {

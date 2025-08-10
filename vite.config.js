@@ -7,6 +7,7 @@ const require = createRequire(import.meta.url)
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [
     react(),
     ckeditor5({

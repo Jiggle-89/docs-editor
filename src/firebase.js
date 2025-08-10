@@ -1,5 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import {getAuth, setPersistence, browserLocalPersistence} from 'firebase/auth'
 import { initializeFirestore, persistentLocalCache } from "firebase/firestore";
@@ -21,11 +22,16 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth()
+auth.languageCode = 'he'
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({
+  'login_hint': 'user@example.com'
+});
 // set auth persistence to local
 setPersistence(auth, browserLocalPersistence)
 initializeFirestore(app, {localCache: persistentLocalCache(/*settings*/{})});
 const analytics = getAnalytics(app);
 
 
-export {auth}
+export {auth, provider}
 export default app;

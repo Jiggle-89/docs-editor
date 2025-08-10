@@ -1,6 +1,6 @@
-import {auth} from './firebase.js'
+import {auth, provider} from './firebase.js'
 import app from './firebase.js'
-import {RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import {RecaptchaVerifier, signInWithPhoneNumber, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import {Modal, Form, InputNumber, Input, Button} from 'antd'
 import {useState,useEffect, useContext} from 'react'
 import PropTypes from 'prop-types'
@@ -13,7 +13,7 @@ const db = getFirestore(app)
 
 
 // eslint-disable-next-line react/prop-types
-function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
+function LoginModal({modalOpen, setModalOpen, setLoginId, loginId, signedIn}) {
   const [form] = Form.useForm();
   const [smsCode, setSmsCode] = useState(''); // this is the sms code that the user will enter
   const [smsSent, setSmsSent] = useState(false); // this is used to determine whether to show the sms code input or not, after sms was sent
@@ -21,7 +21,7 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (modalOpen){
+    if (modalOpen && !window.recaptchaVerifier){
       window.recaptchaVerifier = new RecaptchaVerifier(auth, 'getSms-button', {
         size: 'invisible',
         callback: (response) => {
@@ -53,12 +53,13 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
                       : Promise.resolve(),
                 },
               ]}>
-              <InputNumber size="large" controls={false} maxLength={9} addonAfter="972+"  onChange={(e) => setNumber(e)} placeholder="501234567" style={{dir: 'ltr !important', textAlign: 'end !important'}} />
+              <InputNumber size="large" controls={false} maxLength={9} addonAfter="972+"  onChange={(e) => setLoginId(e)} placeholder="501234567" style={{dir: 'ltr !important', textAlign: 'end !important'}} />
             </Form.Item>
 
           </Form>
 
           <Button loading={loading} id="getSms-button" type="primary" style={{position: 'absolute', left: '10px', bottom: '10px'}} onClick={getSms} >קבל סמס</Button>
+          <Button onClick={googleLogIn}>התחבר באמצעות גוגל</Button>
         </>
       }
 
@@ -96,7 +97,7 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
       return;
     }
 
-    const phoneNumber = concatPhone(number)
+    const phoneNumber = concatPhone(loginId)
     const appVerifier = window.recaptchaVerifier;
 
     let confirmationResult;
@@ -111,7 +112,7 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
     catch(error) {
       console.log('error sending code to user:', error)
       window.recaptchaVerifier.render().then(function(widgetId) {
-        window.recaptchaVerifier.reset(widgetId);
+        window.grecaptcha.reset(widgetId)
       });
     }
   }
@@ -147,23 +148,61 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
     }
     else 
       setLoading(false)
-
   }
 
-  async function addUserToDb() {
-    const phoneNumber = concatPhone(number)
-    const usersRef = collection(db, 'users');
-    // create a new user in the collection if it doesn't exist, name should be auth.currentUser.uid
-    const docRef = doc(usersRef, auth.currentUser.uid);
-    const docSnap = await getDoc(docRef);
+  async function googleLogIn() {
+    let result;
+    try {
+      result = await signInWithPopup(auth,provider) 
+      const credential = GoogleAuthProvider.credentialFromResult(result)
+      const token = credential.accessToken
+      const user = result.user;
+      const name = user.displayName;
+      if (!userExists())
+        await addUserToDb(name);
+      console.log(user)
+    }
+    catch(error){
+      // Handle Errors here.
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      console.log('error occured on user:' + errorCode + errorMessage)
+    }
+    finally {
+      setModalOpen(false)
+    }
+  }
 
+  // async function addUserToDb() {
+
+  //   const phoneNumber = concatPhone(loginId)
+  //   const usersRef = collection(db, 'users');
+  //   // create a new user in the collection if it doesn't exist, name should be auth.currentUser.uid
+  //   const docRef = doc(usersRef, auth.currentUser.uid);
+  //   const docSnap = await getDoc(docRef);
+
+  //   if (!docSnap.data()) {
+  //     await setDoc(docRef, {
+  //       loginId: phoneNumber,
+  //       isAdmin: false,
+  //     });
+  //   }
+
+  // }
+
+  async function addUserToDb(name) {
+    const usersRef = collection(db, 'users')
+    const docRef = doc(usersRef, auth.currentUser.uid)
+    const docSnap = await getDoc(docRef);
     if (!docSnap.data()) {
       await setDoc(docRef, {
-        phoneNumber: phoneNumber,
-        isAdmin: false,
-      });
+        loginId: name,
+        isAdmin: false
+      })
     }
-
   }
 
   async function userExists() {
@@ -210,7 +249,6 @@ function LoginModal({modalOpen, setModalOpen, setNumber, number, signedIn}) {
 LoginModal.propTypes = {
   modalOpen: PropTypes.bool,
   setModalOpen: PropTypes.func,
-  setNumber: PropTypes.func,
   signedIn: PropTypes.bool,
 }
 
