@@ -32,6 +32,7 @@ const EditFile = observer(() =>{
   const [author, setAuthor] = useState(null)
   const [description, setDescription] = useState(null)
   const [modalLoading, setModalLoading] = useState(false)
+  const [pageData, setPageData] = useState(null)
 
   const editorRef = useRef()
 
@@ -51,7 +52,7 @@ const EditFile = observer(() =>{
 
   useEffect(() => {
     store.setHtml(null);
-    contentLoader({store,name});
+    contentLoader({store,name, setPageData});
   }, [name])
 
   if (store.html === null)
@@ -88,116 +89,64 @@ const EditFile = observer(() =>{
     )
 
   async function postChanges() {
-
-    setModalLoading(true)
-
+    setModalLoading(true);
     try {
-      await form.validateFields();
+        await form.validateFields();
+
+        if (!pageData) {
+            throw new Error("Page data is not loaded yet.");
+        }
+
+        const htmlData = editorRef.current.getData();
+        const jsxData = htmlToJsx(htmlData);
+        
+        await postToGit(
+            jsxData,
+            htmlData,
+            pageData.path,
+            pageData.name,
+            pageData.HE,
+            author,
+            description,
+            false,
+            setModalLoading,
+            store,
+            false
+        );
+
+    } catch (error) {
+        console.error("Error during postChanges:", error);
+        openError('שגיאה', error.message || 'אירעה שגיאה בלתי צפויה.');
+        setModalLoading(false);
     }
-
-    catch (error) {
-      setModalLoading(false)
-      return
-    }
-
-    if (await checkDocExists()) { // checking if someone's already sent a document edit suggestion
-      setModalLoading(false)
-      openError('שגיאה', 'הצעה לעריכה בעמוד זה כבר קיימת במערכת')
-      return
-    }
-
-    let data;
-
-    try {
-      const filesCollection = collection(db, 'files');
-      const docRef = doc(filesCollection, name);
-      const docSnap = await getDoc(docRef);
-
-      data = docSnap.data()
-    }
-
-    catch (error) {
-      setModalLoading(false)
-      openError('שגיאה', 'לא ניתן לשלוף את נתוני הקובץ, נסה שוב מאוחר יותר')
-      return
-    }
-
-    const htmlData = editorRef.current.getData();
-    const jsxData = htmlToJsx(htmlData);
-    const newFilePath = data.path
-
-    try { // validate form
-      await form.validateFields();
-    }
-    catch (error) {
-      setModalLoading(false);
-      return;
-    }
-
-    await postToGit(jsxData, htmlData, newFilePath, data.name, data.HE, author, description, false, setModalLoading, store, false)
-
-
-
-
-  
-  //   const filesCollection = collection(db, 'files');
-  //   const docRef = doc(filesCollection, name);
-  //   const docSnap = await getDoc(docRef);
-
-  //   const newFilesCollection = collection(db, 'newFiles');
-  //   const newDocRef = doc(newFilesCollection, name);
-
-  //   const data = docSnap.data();
-
-  //   const htmlData = editorRef.current.getData();
-  //   const jsxData = htmlToJsx(htmlData);
-
-  //   try {
-  //     await setDoc(newDocRef, {
-  //       dirPath: data.path,
-  //       HE: data.HE,
-  //       name: data.name,
-  //       content: jsxData,
-  //       html: htmlData,
-  //       status: 'editing',
-  //       description: description,
-  //       author: author,
-  //       timestamp: serverTimestamp()
-  //     })
-  //     store.setModalVisible(false)
-  //     console.log('done uploading to firebase')
-  //     openNotification('התהליך הושלם!', 'הקובץ נערך בהצלחה וממתין לאישור')
-  //   }
-  //   catch(error) {
-  //     console.log('error uploading content to firebase:', error)
-  //     openError('שגיאה', 'אירעה שגיאה בעת העלאת הקובץ לשרת')
-  //   }
-  //   finally {
-  //     setModalLoading(false)
-  //   }
-  }
-
+}
   
 }) // ! end of function
 
-async function contentLoader({store,name}) { // this function uses fetchPath to fetch the data from the database and then sets the jsx state to the content of the file for initial load
+async function contentLoader({store, name, setPageData}) {
+  try {
+    console.log(`Renderer: מבקש תוכן עבור הדף '${name}'...`);
+    const pageData = await window.api.getPageContent(name);
 
-  const data = await fetchPath({name})
+    if (pageData && pageData.error) {
+      throw new Error(pageData.error);
+    }
 
-  store.setHtml(data.html)
-}
-
-async function fetchPath({name}) { // this function fetches the data from firebase according to name variable (that is the :name parameter url and the page name)
-  const filesCollection = collection(db, 'files');
-
-  const docRef = doc(filesCollection, name);
-  const docSnap = await getDoc(docRef);
-  const data = docSnap.data();
-  return data;
+    if (pageData) {
+      store.setHtml(pageData.html || ''); // Fallback to empty string if html is null/undefined
+      setPageData(pageData)
+      console.log("Renderer: התוכן נטען והוצג באדיטור.");
+    } else {
+      throw new Error("לא התקבל מידע עבור הדף המבוקש.");
+    }
+  } catch (error) {
+    console.error("Renderer: שגיאה בטעינת תוכן הדף:", error);
+    // כאן אפשר להוסיף לוגיקת טיפול בשגיאות, למשל הצגת הודעה למשתמש
+    store.setHtml('<p>שגיאה בטעינת המידע.</p>');
+  }
 }
 
 export default EditFile
-
 
 
 // ! async function postChanges() { saving this for admin page

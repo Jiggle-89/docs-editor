@@ -1,0 +1,195 @@
+[
+  {
+    "key": "pages/peaks",
+    "file": "peaks",
+    "title": "peaks",
+    "children": [
+      {
+        "key": "pages/peaks/aaz.mdx",
+        "file": "aaz.mdx",
+        "title": "aaz"
+      },
+      {
+        "key": "pages/peaks/keva",
+        "file": "keva",
+        "title": "keva",
+        "children": [
+          {
+            "key": "pages/peaks/keva/appendix1.mdx",
+            "file": "appendix1.mdx",
+            "title": "appendix1"
+          },
+          {
+            "key": "pages/peaks/keva/appendix2.mdx",
+            "file": "appendix2.mdx",
+            "title": "appendix2"
+          }
+        ]
+      },
+      {
+        "key": "pages/peaks/management.mdx",
+        "file": "management.mdx",
+        "title": "management"
+      }
+    ]
+  },
+  {
+    "key": "pages/tkina",
+    "file": "tkina",
+    "title": "tkina",
+    "children": [
+      {
+        "key": "pages/tkina/building",
+        "file": "building",
+        "title": "building",
+        "children": [
+          {
+            "key": "pages/tkina/building/milorg.mdx",
+            "file": "milorg.mdx",
+            "title": "milorg"
+          },
+          {
+            "key": "pages/tkina/building/plan.mdx",
+            "file": "plan.mdx",
+            "title": "plan"
+          }
+        ]
+      },
+      {
+        "key": "pages/tkina/orderstructure",
+        "file": "orderstructure",
+        "title": "orderstructure",
+        "children": [
+          {
+            "key": "pages/tkina/orderstructure/orders.mdx",
+            "file": "orders.mdx",
+            "title": "orders"
+          },
+          {
+            "key": "pages/tkina/orderstructure/regulation.mdx",
+            "file": "regulation.mdx",
+            "title": "regulation"
+          },
+          {
+            "key": "pages/tkina/orderstructure/structure.mdx",
+            "file": "structure.mdx",
+            "title": "structure"
+          }
+        ]
+      },
+      {
+        "key": "pages/tkina/organization",
+        "file": "organization",
+        "title": "organization",
+        "children": [
+          {
+            "key": "pages/tkina/organization/abroad.mdx",
+            "file": "abroad.mdx",
+            "title": "abroad"
+          },
+          {
+            "key": "pages/tkina/organization/major.mdx",
+            "file": "major.mdx",
+            "title": "major"
+          },
+          {
+            "key": "pages/tkina/organization/mofet.mdx",
+            "file": "mofet.mdx",
+            "title": "mofet"
+          },
+          {
+            "key": "pages/tkina/organization/nigud.mdx",
+            "file": "nigud.mdx",
+            "title": "nigud"
+          },
+          {
+            "key": "pages/tkina/organization/process.mdx",
+            "file": "process.mdx",
+            "title": "process"
+          },
+          {
+            "key": "pages/tkina/organization/sensitive.mdx",
+            "file": "sensitive.mdx",
+            "title": "sensitive"
+          },
+          {
+            "key": "pages/tkina/organization/taki.mdx",
+            "file": "taki.mdx",
+            "title": "taki"
+          },
+          {
+            "key": "pages/tkina/organization/timed.mdx",
+            "file": "timed.mdx",
+            "title": "timed"
+          }
+        ]
+      },
+      {
+        "key": "pages/tkina/tkinatoarp",
+        "file": "tkinatoarp",
+        "title": "tkinatoarp",
+        "children": [
+          {
+            "key": "pages/tkina/tkinatoarp/bizur.mdx",
+            "file": "bizur.mdx",
+            "title": "bizur"
+          },
+          {
+            "key": "pages/tkina/tkinatoarp/goodteken.mdx",
+            "file": "goodteken.mdx",
+            "title": "goodteken"
+          },
+          {
+            "key": "pages/tkina/tkinatoarp/liba",
+            "file": "liba",
+            "title": "liba",
+            "children": [
+              {
+                "key": "pages/tkina/tkinatoarp/liba/document",
+                "file": "document",
+                "title": "document",
+                "children": [
+                  {
+                    "key": "pages/tkina/tkinatoarp/liba/document/agatusers.mdx",
+                    "file": "agatusers.mdx",
+                    "title": "agatusers"
+                  },
+                  {
+                    "key": "pages/tkina/tkinatoarp/liba/document/creating.mdx",
+                    "file": "creating.mdx",
+                    "title": "creating"
+                  },
+                  {
+                    "key": "pages/tkina/tkinatoarp/liba/document/editexist.mdx",
+                    "file": "editexist.mdx",
+                    "title": "editexist"
+                  }
+                ]
+              },
+              {
+                "key": "pages/tkina/tkinatoarp/liba/folders.mdx",
+                "file": "folders.mdx",
+                "title": "folders"
+              }
+            ]
+          },
+          {
+            "key": "pages/tkina/tkinatoarp/retro.mdx",
+            "file": "retro.mdx",
+            "title": "retro"
+          },
+          {
+            "key": "pages/tkina/tkinatoarp/toarp.mdx",
+            "file": "toarp.mdx",
+            "title": "toarp"
+          },
+          {
+            "key": "pages/tkina/tkinatoarp/unit.mdx",
+            "file": "unit.mdx",
+            "title": "unit"
+          }
+        ]
+      }
+    ]
+  }
+]
