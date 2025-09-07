@@ -1,14 +1,10 @@
 import { useState, useEffect, useContext, useRef } from 'react'
-import { auth } from './firebase';
-
-
 import {useNavigate} from 'react-router-dom'
 import { observer } from 'mobx-react';
 import { MobXProviderContext } from 'mobx-react'
 import './index.css'
 import './mdxeditor.css'
-import { getFirestore, collection, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore'
-import app from './firebase'
+// Firebase imports removed - using localStorage instead
 import { Form, Input, TreeSelect, Modal, Checkbox, Spin, FloatButton} from 'antd'
 import { useParams } from 'react-router-dom'
 import { LoadingOutlined, DeleteOutlined } from '@ant-design/icons'
@@ -25,7 +21,7 @@ import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic'
 function useStores() {
   return useContext(MobXProviderContext);
 }
-const db = getFirestore(app);
+// Firebase database reference removed - using localStorage instead
 
 const EditSaved = observer(() =>{
 
@@ -147,39 +143,37 @@ const EditSaved = observer(() =>{
     )
   
   async function saveChanges() {
-
     setModalLoading(true);
 
-
-    const usersCollection = collection(db, "users");
-    const userDoc = doc(usersCollection, auth.currentUser.uid);
-    const pages = collection(userDoc, "pages");
-    // create a new document in the pages collection
-
-    // get data from enText doc and save doc fields to heText and enText vars
-    let he;
-    let en;
-    await getDoc(doc(pages, name)).then((doc) => {
-      he = doc.data().he
-      en = doc.data().name
-    })
-    .catch((error) => {
-      console.log('error', error)
-      openError('שגיאה', 'שגיאה בשמירת העמוד')
-    })
-
-    const html = editorRef.current.getData()
-    const jsxData = htmlToJsx(html)
-
-
     try {
-      await setDoc(doc(pages, name), {
-        he: he,
-        name: en,
-        status: 'saved in user',
+      // Get current draft data to preserve existing fields
+      const draftKey = `draft_${name}`;
+      const existingDraft = localStorage.getItem(draftKey);
+      let existingData = {};
+      
+      if (existingDraft) {
+        existingData = JSON.parse(existingDraft);
+      }
+
+      const html = editorRef.current.getData()
+      const jsxData = htmlToJsx(html)
+
+      // Update draft with new content while preserving existing metadata
+      const updatedDraftData = {
+        ...existingData,
+        he: existingData.he || heText,
+        name: existingData.name || name,
+        status: 'draft',
         content: jsxData,
         html: html,
-      })
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem(draftKey, JSON.stringify(updatedDraftData));
+      
+      // Trigger custom event to update saved pages list
+      window.dispatchEvent(new CustomEvent('localStorageChanged'));
+      
       openNotification('התהליך הושלם', '!העמוד נשמר בהצלחה')
     }
 
@@ -214,13 +208,15 @@ const EditSaved = observer(() =>{
   }
 
   async function deletePage() {
-    const usersCollection = collection(db, "users");
-    const userDoc = doc(usersCollection, auth.currentUser.uid);
-    const pages = collection(userDoc, "pages");
-    
     try {
-      await deleteDoc(doc(pages, name))
-      navigate('/')
+      const draftKey = `draft_${name}`;
+      localStorage.removeItem(draftKey);
+      
+      // Trigger custom event to update saved pages list
+      window.dispatchEvent(new CustomEvent('localStorageChanged'));
+      
+      openNotification('העמוד נמחק', 'הטיוטה נמחקה בהצלחה');
+      navigate('/');
     }
     catch (error) {
       openError('שגיאה', 'שגיאה במחיקת העמוד')
@@ -237,21 +233,21 @@ async function contentLoader({store,name}) { // this function uses fetchPath to 
   store.setHtml(data.html)
 }
 
-async function fetchPath({name}) { // this function fetches the data from firebase according to name variable (that is the :name parameter url and the page name)
-  const usersCollection = collection(db, 'users');
-
-  // wait for the user to be authenticated
-  while (auth.currentUser === null) {
-    await new Promise(r => setTimeout(r, 1000))
+async function fetchPath({name}) { // this function fetches the data from localStorage according to name variable
+  try {
+    const draftKey = `draft_${name}`;
+    const draftData = localStorage.getItem(draftKey);
+    
+    if (!draftData) {
+      throw new Error(`Draft '${name}' not found in localStorage`);
+    }
+    
+    const data = JSON.parse(draftData);
+    return data;
+  } catch (error) {
+    console.error('Error fetching draft from localStorage:', error);
+    throw error;
   }
-  const userDoc = doc(usersCollection, auth.currentUser.uid);
-  const pages = collection(userDoc, 'pages');
-  const pageDoc = doc(pages, name);
-
-  const docSnap = await getDoc(pageDoc);
-  const data = docSnap.data();
-
-  return data;
 }
 
 export default EditSaved

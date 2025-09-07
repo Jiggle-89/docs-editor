@@ -4,8 +4,7 @@ import { observer } from 'mobx-react';
 import { MobXProviderContext } from 'mobx-react'
 import './index.css'
 import './mdxeditor.css'
-import { getFirestore, collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
-import app from './firebase'
+// Firebase imports removed - using local API instead
 import postToGit from './PostToGit'
 import { Modal, Form, Input} from 'antd'
 import { useParams } from 'react-router-dom'
@@ -20,7 +19,7 @@ import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic'
 function useStores() {
   return useContext(MobXProviderContext);
 }
-const db = getFirestore(app);
+// Firebase database reference removed - using local API instead
 
 const EditFile = observer(() =>{
 
@@ -41,14 +40,7 @@ const EditFile = observer(() =>{
 
   const {openNotification, openError, contextHolder} = useNotification()
 
-  async function checkDocExists() { // this function validates if there's a document with the same document name in the collections, used for Form
-    const newDocRef = doc(db, "newFiles", name)
-    const newDocSnap = await getDoc(newDocRef);
-    if (newDocSnap.exists()) 
-      return true
-    else
-      return false;
-  }
+  // checkDocExists function removed - was unused Firebase code
 
   useEffect(() => {
     store.setHtml(null);

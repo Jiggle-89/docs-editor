@@ -354,6 +354,9 @@ const NewPage = observer(() =>{
       
       localStorage.setItem(`draft_${enText}`, JSON.stringify(draftData));
       
+      // Trigger custom event to update saved pages list
+      window.dispatchEvent(new CustomEvent('localStorageChanged'));
+      
       store.setSaveModal(false);
       openNotification('התהליך הושלם!', 'הקובץ נשמר כטיוטה בהצלחה')
       navigate(`/edit-saved/${enText}`)

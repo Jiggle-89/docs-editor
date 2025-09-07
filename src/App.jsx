@@ -1,4 +1,4 @@
-import { React } from "react";
+// React import removed - not needed
 // ייבואי פיירבייס עדיין נשארים כי הם משמשים למערכת המשתמשים, נטפל בהם בנפרד
 import { auth } from "./firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -7,7 +7,6 @@ import { Layout, Menu } from "antd";
 import {
   getFirestore,
   collection,
-  getDocs,
   doc,
   getDoc,
 } from "firebase/firestore";
@@ -63,9 +62,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (signedIn) {
-      unsubscribeRef.current = savedPages(setCachedPages);
-    }
+    // Always load saved pages since we're using localStorage (no authentication needed)
+    unsubscribeRef.current = savedPages(setCachedPages);
 
     // Clean up the listener when the component unmounts
     return () => {
@@ -73,7 +71,7 @@ function App() {
         unsubscribeRef.current();
       }
     };
-  }, [signedIn]);
+  }, []); // Remove signedIn dependency
 
   useEffect(() => {
     if (siderPages) {
@@ -198,36 +196,43 @@ function App() {
   };
 
   const SavedPages = () => {
-    cachedPages?.forEach((page) => {
-      page.label = <Link to={`/edit-saved/${page.name}`}>{page.he}</Link>;
-      page.icon = <FileOutlined />;
-    });
-
-    if (cachedPages === false) {
+    if (cachedPages === null) {
       return <LoadingOutlined style={loaderStyle} />;
-    } else
-      return (
-        <>
-          <Link
-            to="/create"
-            style={{
-              color: "black",
-              display: "flex",
-              justifyContent: "center",
-              fontSize: "1.5rem",
-            }}
-          >
-            +
-          </Link>
+    }
 
+    if (cachedPages && cachedPages.length > 0) {
+      cachedPages.forEach((page) => {
+        page.label = <Link to={`/edit-saved/${page.name}`}>{page.he}</Link>;
+        page.icon = <FileOutlined />;
+      });
+    }
+
+    return (
+      <>
+        <Link
+          to="/create"
+          style={{
+            color: "black",
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.5rem",
+          }}
+        >
+          +
+        </Link>
+
+        {cachedPages && cachedPages.length > 0 ? (
           <Menu
             theme="light"
             mode="inline"
             style={{ paddingBottom: "92px" }}
             items={cachedPages}
           />
-        </>
-      );
+        ) : (
+          <Empty description="אין טיוטות שמורות" />
+        )}
+      </>
+    );
   };
 
   const tabItems = [
@@ -240,8 +245,7 @@ function App() {
       label: "העמודים שלי",
       key: "2",
       children: <SavedPages />,
-      // disable the tab if the user isn't signed in or if he is signed in but savedPages is empty
-      disabled: !signedIn,
+      // No longer disabled - localStorage drafts don't require authentication
     },
   ];
 
@@ -449,7 +453,7 @@ function App() {
     return data.isAdmin;
   }
 
-  async function signOut(e) {
+  async function signOut() {
     await auth.signOut();
     navigate("/");
 
