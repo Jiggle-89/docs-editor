@@ -92,6 +92,49 @@ ipcMain.handle('test-ipc', async () => {
   return { success: true, message: 'IPC communication is working!' };
 });
 
+// Run project scripts with appropriate package manager (pnpm if lockfile exists), streaming output
+async function ensureDependenciesInstalled() {
+  const hasNodeModules = fs.existsSync(path.join(gitRepoPath, 'node_modules'));
+  if (hasNodeModules) return;
+
+  const usePnpm = fs.existsSync(path.join(gitRepoPath, 'pnpm-lock.yaml'));
+  const installCmd = usePnpm ? 'npx --yes pnpm install' : 'npm ci || npm install';
+  console.log('Main: Installing dependencies with:', installCmd, 'in', gitRepoPath);
+  await new Promise((resolve, reject) => {
+    const child = exec(installCmd, { cwd: gitRepoPath });
+    child.stdout.on('data', (data) => console.log(`[deps stdout]: ${data}`));
+    child.stderr.on('data', (data) => console.error(`[deps stderr]: ${data}`));
+    child.on('close', (code) => code === 0 ? resolve() : reject(new Error(`deps install exited with ${code}`)));
+    child.on('error', (err) => reject(err));
+  });
+}
+
+function runProjectScript(scriptName) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      await ensureDependenciesInstalled();
+    } catch (e) {
+      return reject(e);
+    }
+    const usePnpm = fs.existsSync(path.join(gitRepoPath, 'pnpm-lock.yaml'));
+    const cmd = usePnpm ? `npx --yes pnpm run ${scriptName}` : `npm run ${scriptName}`;
+    console.log(`Main: Running script '${scriptName}' with: ${cmd} (cwd=${gitRepoPath})`);
+    const child = exec(cmd, { cwd: gitRepoPath });
+    const tag = usePnpm ? 'pnpm' : 'npm';
+    child.stdout.on('data', (data) => console.log(`[${tag} ${scriptName} stdout]: ${data}`));
+    child.stderr.on('data', (data) => console.error(`[${tag} ${scriptName} stderr]: ${data}`));
+    child.on('close', (code) => {
+      if (code === 0) {
+        console.log(`Main: script '${scriptName}' completed successfully.`);
+        resolve();
+      } else {
+        reject(new Error(`script '${scriptName}' exited with code ${code}`));
+      }
+    });
+    child.on('error', (err) => reject(err));
+  });
+}
+
 // ערוץ לקריאת הנתונים
 ipcMain.handle('get-sider-content', async () => {
   console.log('Main process: קורא את קבצי הנתונים המקומיים...');
@@ -311,7 +354,38 @@ ipcMain.handle('publish-changes', async (event, { jsxData, htmlData, newFilePath
     await git.push('origin', 'main');
     console.log('Main: Pushed main branch');
 
-    // Step 8: Clean up - delete deployments branch
+    // Step 8: Build and export static site
+    // Clean previous build/export to ensure freshness
+    try {
+      const nextDir = path.join(gitRepoPath, '.next');
+      const outDir = path.join(gitRepoPath, 'out');
+      console.log('Main: Cleaning previous build artifacts:', { nextDir, outDir });
+      fs.rmSync(nextDir, { recursive: true, force: true });
+      fs.rmSync(outDir, { recursive: true, force: true });
+    } catch (cleanErr) {
+      console.warn('Main: Warning during cleanup (non-fatal):', cleanErr?.message);
+    }
+
+    console.log('Main: Starting site build...');
+    await runProjectScript('build');
+    console.log('Main: Build finished. Starting export...');
+    await runProjectScript('export');
+    console.log('Main: Export finished. (out folder should be generated)');
+
+    // Write build info file to out directory
+    try {
+      const latest = await git.log(['-1']);
+      const commitHash = latest?.latest?.hash || null;
+      const exportedAt = new Date().toISOString();
+      const buildInfo = { commit: commitHash, exportedAt };
+      const buildInfoPath = path.join(gitRepoPath, 'out', '.build-info.json');
+      fs.writeFileSync(buildInfoPath, JSON.stringify(buildInfo, null, 2));
+      console.log('Main: Wrote build info:', buildInfoPath, buildInfo);
+    } catch (infoErr) {
+      console.warn('Main: Warning writing build info (non-fatal):', infoErr?.message);
+    }
+
+    // Step 9: Clean up - delete deployments branch
     console.log('Main: Cleaning up deployments branch...');
     try {
       await git.deleteLocalBranch('deployments');
@@ -321,8 +395,8 @@ ipcMain.handle('publish-changes', async (event, { jsxData, htmlData, newFilePath
       console.log('Main: Error cleaning up deployments branch:', error.message);
     }
 
-    console.log('Main: בוצעה דחיפה ל-Git. התהליך הסתיים בהצלחה!');
-    return { success: true, message: '--- NEW CODE CONFIRMED --- השינויים פורסמו בהצלחה!' };
+    console.log('Main: Git push and static export completed successfully.');
+    return { success: true, message: 'Publishing complete. Git updated and site exported.' };
 
   } catch (error) {
     console.error('Main: אירעה שגיאה בתהליך הפרסום', error);
