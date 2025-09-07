@@ -3,9 +3,7 @@ import {useNavigate} from 'react-router-dom'
 import React from 'react'
 import './index.css'
 import './mdxeditor.css'
-import {getFirestore, collection, doc, setDoc} from 'firebase/firestore'
-import app from './firebase'
-import { auth } from './firebase'
+// Firebase imports removed - now using local validation
 import { LoadingOutlined } from '@ant-design/icons'
 import {TreeSelect, Modal, Input, Form, Checkbox} from 'antd'
 import {Spin} from 'antd'
@@ -23,7 +21,7 @@ import {MobXProviderContext} from 'mobx-react'
 
 import { observer } from 'mobx-react'
 
-const db = getFirestore(app);
+// Firebase database reference removed - now using local validation
 function useStores() {
   return React.useContext(MobXProviderContext);
 }
@@ -328,7 +326,7 @@ const NewPage = observer(() =>{
   //   }
   // }
 
-  async function saveChanges() { // this function saves the changes to the user's collection in firebase
+  async function saveChanges() { // this function saves the changes to local storage as a draft
     try {
       await form.validateFields();
     }
@@ -340,26 +338,24 @@ const NewPage = observer(() =>{
 
     setModalLoading(true);
 
-
-    const usersCollection = collection(db, "users");
-    const userDoc = doc(usersCollection, auth.currentUser.uid);
-    const pages = collection(userDoc, "pages");
-    // create a new document in the pages collection
-
     const html = editorRef.current.getData()
     const jsxData = htmlToJsx(html)
 
-
     try {
-      await setDoc(doc(pages, enText), {
+      // Save draft to localStorage
+      const draftData = {
         he: heText,
         name: enText,
-        status: 'saved in user',
+        status: 'draft',
         content: jsxData,
         html: html,
-      })
+        timestamp: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`draft_${enText}`, JSON.stringify(draftData));
+      
       store.setSaveModal(false);
-      openNotification('התהליך הושלם!', 'הקובץ נשמר בשבילך בהצלחה')
+      openNotification('התהליך הושלם!', 'הקובץ נשמר כטיוטה בהצלחה')
       navigate(`/edit-saved/${enText}`)
     }
 

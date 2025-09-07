@@ -1,17 +1,12 @@
 import { observer } from "mobx-react";
-import app from "./firebase";
-import {auth} from './firebase'
 import { Modal, Form, Button, Input } from "antd";
 import { useState, useContext } from "react";
 import { MobXProviderContext } from "mobx-react";
 import { checkHeExists, checkDocExists } from "./Checks";
-import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from "firebase/firestore";
 
 function useStores() {
   return useContext(MobXProviderContext)
 }
-
-const db = getFirestore(app);
 
 
 const SaveModal = observer(({saveChanges, modalLoading, setEnText, setHeText, form}) => {
