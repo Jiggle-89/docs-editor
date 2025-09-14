@@ -1,26 +1,11 @@
-// React import removed - not needed
-// ייבואי פיירבייס עדיין נשארים כי הם משמשים למערכת המשתמשים, נטפל בהם בנפרד
-import { auth } from "./firebase";
-import { onAuthStateChanged } from "firebase/auth";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import { Layout, Menu } from "antd";
-import {
-  getFirestore,
-  collection,
-  doc,
-  getDoc,
-} from "firebase/firestore";
-import app from "./firebase";
 import { useEffect, useState, useContext, useRef } from "react";
-import FetchData from "./FetchData";
 import savedPages from "./SavedPages";
-import LoginModal from "./LoginModal";
 import {
   LoadingOutlined,
   FileOutlined,
   SearchOutlined,
-  UserOutlined,
-  LogoutOutlined,
   SaveOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
@@ -32,7 +17,6 @@ function useStores() {
   return useContext(MobXProviderContext);
 }
 
-const db = getFirestore(app);
 
 function App() {
   const location = useLocation();
@@ -43,9 +27,6 @@ function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [ready, setReady] = useState(false);
   const [search, setSearch] = useState("");
-  const [loginId, setLoginId] = useState(""); // phone number of the user for the login modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
   const [tabKey, setTabKey] = useState("1");
   const [cachedPages, setCachedPages] = useState(null);
   const unsubscribeRef = useRef(null);
@@ -58,11 +39,10 @@ function App() {
 
   useEffect(() => {
     execute(); // execute all async functions on load
-    isSignedIn();
   }, []);
 
   useEffect(() => {
-    // Always load saved pages since we're using localStorage (no authentication needed)
+    // Load saved pages from localStorage
     unsubscribeRef.current = savedPages(setCachedPages);
 
     // Clean up the listener when the component unmounts
@@ -71,7 +51,7 @@ function App() {
         unsubscribeRef.current();
       }
     };
-  }, []); // Remove signedIn dependency
+  }, []);
 
   useEffect(() => {
     if (siderPages) {
@@ -312,51 +292,22 @@ function App() {
           </Content>
         </Layout>
 
-        {!signedIn && (
-          <>
-            <FloatButton
-              type="primary"
-              onClick={(e) => {
-                e.stopPropagation();
-                setModalOpen(true);
-              }}
-              icon={<UserOutlined />}
-              style={{ marginLeft: "20px" }}
-            />
-            <LoginModal
-              signedIn={signedIn}
-              modalOpen={modalOpen}
-              setModalOpen={setModalOpen}
-              setLoginId={setLoginId}
-              loginId={loginId}
-            />
-          </>
-        )}
-        {signedIn && (
-          <>
-            <FloatButton.Group
-              trigger="click"
-              style={{ marginLeft: "40px" }}
-              icon={<UserOutlined />}
-            >
-              <FloatButton
-                icon={<UploadOutlined />}
-                tooltip={<div>העלאה</div>}
-                onClick={uploadModal}
-              />
-              <FloatButton
-                icon={<SaveOutlined />}
-                tooltip={<div>שמירה</div>}
-                onClick={cacheModal}
-              />
-              <FloatButton
-                icon={<LogoutOutlined />}
-                onClick={async (e) => await signOut(e)}
-                tooltip={<div>יציאה</div>}
-              />
-            </FloatButton.Group>
-          </>
-        )}
+        <FloatButton.Group
+          trigger="click"
+          style={{ marginLeft: "40px" }}
+          icon={<UploadOutlined />}
+        >
+          <FloatButton
+            icon={<UploadOutlined />}
+            tooltip={<div>העלאה</div>}
+            onClick={uploadModal}
+          />
+          <FloatButton
+            icon={<SaveOutlined />}
+            tooltip={<div>שמירה</div>}
+            onClick={cacheModal}
+          />
+        </FloatButton.Group>
       </Layout>
 
       <Tour
@@ -401,6 +352,9 @@ function App() {
       // 4. עדכון ה-state עם המידע המוכן להצגה
       setSiderPages(mergedData);
       setFiltered(mergedData);
+      
+      // 5. עדכון ה-store עם נתוני העץ עבור ה-TreeSelect
+      store.setTree(mergedData);
 
     } catch (error) {
       console.log("error fetching content from local files:", error);
@@ -428,40 +382,8 @@ function App() {
     return flatItems.filter((item) => item.he && item.he.includes(search));
   }
 
-  function isSignedIn() {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setSignedIn(true);
-        console.log("admin: " + (await isAdmin()));
-      } else {
-        setSignedIn(false);
-        console.log("not signed in");
-      }
-    });
-  }
-
-  async function isAdmin() {
-    // check if current user is admin, by reading his own document in the users collection
-
-    if (!auth.currentUser) {
-      return false;
-    }
-    const usersCollection = collection(db, "users");
-    const userDoc = doc(usersCollection, auth.currentUser.uid);
-    const userDocSnap = await getDoc(userDoc);
-    const data = userDocSnap.data();
-    return data.isAdmin;
-  }
-
-  async function signOut() {
-    await auth.signOut();
-    navigate("/");
-
-    setSignedIn(false);
-  }
 
   async function uploadModal() {
-    if (location.pathname.includes("create")) await FetchData({ store }); // fetch the data, send the store cuz it can't be used there
     store.setModalVisible(true);
   }
 

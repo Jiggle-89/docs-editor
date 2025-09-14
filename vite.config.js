@@ -1,32 +1,30 @@
-import {createRequire} from 'node:module'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import ckeditor5 from '@ckeditor/vite-plugin-ckeditor5';
-
-const require = createRequire(import.meta.url)
+import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: './',
-  plugins: [
-    react(),
-    ckeditor5({
-      theme: require.resolve('@ckeditor/ckeditor5-theme-lark')
-    })
-
-  ],
+  plugins: [react()],
   optimizeDeps: {
-    include: ['@workspace/ckeditor5-custom-build'],
+    include: ['@ckeditor/ckeditor5-react', 'ckeditor5']
   },
-  rollupOptions: {
-    preserveModules: true,
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'ckeditor-react': ['@ckeditor/ckeditor5-react'],
+          'ckeditor5': ['ckeditor5']
+        }
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      'ckeditor5': path.resolve(__dirname, 'node_modules/ckeditor5/dist/ckeditor5.js')
+    }
   },
   define: {
     global: {}
-  },
-  build: {
-    commonjsOptions: {
-      include: [/@workspace\/ckeditor5-custom-build/, /node_modules/],
-    }
   }
 })

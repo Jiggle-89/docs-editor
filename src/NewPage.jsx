@@ -12,7 +12,7 @@ import { checkHeExists, checkDocExists } from './Checks'
 import postToGit from './PostToGit'
 import SaveModal from './SaveModal'
 import { CKEditor } from '@ckeditor/ckeditor5-react'
-import { ClassicEditor } from '@ckeditor/ckeditor5-editor-classic'
+import { ClassicEditor } from 'ckeditor5'
 import editorConfig from './EditorConfig'
 
 import { useNotification } from './NotificationConfig'

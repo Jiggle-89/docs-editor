@@ -8,7 +8,6 @@ import {
 import { Provider } from 'mobx-react'
 import Store from './Store.jsx'
 import App from './App.jsx'
-import Admin from './Admin.jsx'
 import EditFile from './EditFile.jsx'
 import EditSaved from './EditSaved.jsx'
 import ErrorPage from './routes/error-page.jsx'
@@ -34,8 +33,7 @@ const routes = [
         path: 'edit-saved',
         children: [{ path: ':name', element: <EditSaved /> }]
       },
-      { path: 'create', element: <NewPage /> },
-      { path: 'admin', element: <Admin /> }
+      { path: 'create', element: <NewPage /> }
     ],
     errorElement: <ErrorPage />
   }

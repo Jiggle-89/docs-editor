@@ -44,34 +44,56 @@ const createWindow = (port = 5173) => {
       contextIsolation: true
     }
   })
-  mainWindow.loadURL(`http://localhost:${port}`)
+  
+  // Check if we're in production (built app) or development
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  
+  if (isDev) {
+    // Development mode - load from Vite dev server
+    mainWindow.loadURL(`http://localhost:${port}`)
+  } else {
+    // Production mode - load from built files
+    const indexPath = path.join(__dirname, 'dist', 'index.html');
+    mainWindow.loadFile(indexPath);
+  }
 }
 
 app.whenReady().then(() => {
-  viteProcess = exec('npm run dev');
-  viteProcess.stdout.on('data', (data) => {
-    console.log(`[Vite stdout]: ${data}`);
-    // Check if Vite is ready and extract the port
-    if (data.includes('Local:') && data.includes('http://localhost:')) {
-      const portMatch = data.match(/http:\/\/localhost:(\d+)/);
-      if (portMatch && portMatch[1]) {
-        const port = portMatch[1];
-        console.log(`[Main]: Vite is ready on port ${port}`);
-        if (!mainWindow) {
-          createWindow(port);
+  // Check if we're in development or production
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  
+  if (isDev) {
+    // Development mode - start Vite dev server
+    console.log('[Main]: Starting in development mode with Vite dev server');
+    viteProcess = exec('npm run dev');
+    viteProcess.stdout.on('data', (data) => {
+      console.log(`[Vite stdout]: ${data}`);
+      // Check if Vite is ready and extract the port
+      if (data.includes('Local:') && data.includes('http://localhost:')) {
+        const portMatch = data.match(/http:\/\/localhost:(\d+)/);
+        if (portMatch && portMatch[1]) {
+          const port = portMatch[1];
+          console.log(`[Main]: Vite is ready on port ${port}`);
+          if (!mainWindow) {
+            createWindow(port);
+          }
         }
       }
-    }
-  });
-  viteProcess.stderr.on('data', (data) => console.error(`[Vite stderr]: ${data}`));
-  
-  // Fallback: create window after a delay if port detection fails
-  setTimeout(() => {
-    if (!mainWindow) {
-      console.log('[Main]: Fallback - creating window on default port 5173');
-      createWindow(5173);
-    }
-  }, 5000);
+    });
+    viteProcess.stderr.on('data', (data) => console.error(`[Vite stderr]: ${data}`));
+    
+    // Fallback: create window after a delay if port detection fails
+    setTimeout(() => {
+      if (!mainWindow) {
+        console.log('[Main]: Fallback - creating window on default port 5173');
+        createWindow(5173);
+      }
+    }, 5000);
+  } else {
+    // Production mode - load built files directly
+    console.log('[Main]: Starting in production mode with built files');
+    createWindow();
+  }
 })
 
 app.on('will-quit', () => {
@@ -159,8 +181,23 @@ ipcMain.handle('get-sider-content', async () => {
       });
     };
     addHebrewNamesRecursive(structureData);
+
+    // Transform data for TreeSelect component
+    const transformForTreeSelect = (items) => {
+      return items.map((item) => {
+        const transformed = {
+          value: item.key, // Use key as value for TreeSelect
+          title: item.he || item.title, // Use Hebrew name if available, otherwise English
+          key: item.key,
+          children: item.children ? transformForTreeSelect(item.children) : undefined
+        };
+        return transformed;
+      });
+    };
+
+    const treeSelectData = transformForTreeSelect(structureData);
     console.log('Main process: מיזוג הנתונים הושלם. שולח לרנדור.');
-    return structureData;
+    return treeSelectData;
   } catch (error) {
     console.error('Main process: אירעה שגיאה בקריאה או עיבוד של הנתונים המקומיים:', error);
     return { error: error.message };

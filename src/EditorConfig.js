@@ -1,62 +1,65 @@
-import { Bold, Italic, Strikethrough, Subscript, Superscript, Underline } from '@ckeditor/ckeditor5-basic-styles';
-import { Essentials } from '@ckeditor/ckeditor5-essentials'
-import { Paragraph } from '@ckeditor/ckeditor5-paragraph'
-import { Alignment } from '@ckeditor/ckeditor5-alignment'
-import { Autoformat } from '@ckeditor/ckeditor5-autoformat'
-import { Heading } from '@ckeditor/ckeditor5-heading'
-import { Font } from '@ckeditor/ckeditor5-font';
-import { List } from '@ckeditor/ckeditor5-list';
-import { ListProperties } from '@ckeditor/ckeditor5-list'
-import SourceEditing from '@ckeditor/ckeditor5-source-editing/src/sourceediting';
-import { SimpleUploadAdapter } from '@ckeditor/ckeditor5-upload';
-import { Image, ImageCaption, ImageResize, ImageStyle, ImageToolbar } from '@ckeditor/ckeditor5-image';
-import { LinkImage } from '@ckeditor/ckeditor5-link'
-import { ImageInsert } from '@ckeditor/ckeditor5-image'
-import { FindAndReplace } from '@ckeditor/ckeditor5-find-and-replace'
-import { Clipboard } from '@ckeditor/ckeditor5-clipboard';
-import { PasteFromOffice } from '@ckeditor/ckeditor5-paste-from-office';
-import { TextPartLanguage } from '@ckeditor/ckeditor5-language';
-import {
-	Table,
-	TableCaption,
-	TableCellProperties,
-	TableColumnResize,
-	TableProperties,
-	TableToolbar
-} from '@ckeditor/ckeditor5-table';
+// Add individual essential plugins + additional features
+import { 
+  Paragraph,
+  Heading,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  Link,
+  Undo,
+  Alignment,
+  Font,
+  SourceEditing,
+  FindAndReplace
+} from 'ckeditor5';
 
 
 const editorConfig =  {
+  // License key - required for new installation method
+  // Use 'GPL' for open source projects that comply with GPL license
+  licenseKey: 'GPL',
+  // Include only the essential plugins that ClassicEditor needs
+  plugins: [
+    Paragraph,
+    Heading,
+    Bold,
+    Italic,
+    Underline,
+    List,
+    Link,
+    Undo,
+    Alignment,
+    Font,
+    SourceEditing,
+    FindAndReplace
+  ],
+  // Plugins array - required for new installation method
   // protect line breaks from being parsed
   protectedSource: [/\n/g, /<\?[\s\S]*?\?>/g],
-  plugins: [Essentials,Table, SimpleUploadAdapter, TextPartLanguage, PasteFromOffice, TableToolbar, Clipboard, TableCaption, TableCellProperties, TableColumnResize,TableProperties, FindAndReplace, Image, LinkImage, ImageInsert, ImageCaption, ImageResize, ImageStyle, ImageToolbar, SourceEditing, List, ListProperties, Paragraph, Alignment, Bold, Italic, Underline, Strikethrough,Subscript, Superscript, Autoformat, Heading, Font],
   language: {textPartLanguage:[{title: 'עברית', languageCode: 'he'}], ui: 'he', content: 'he'},
   toolbar: {
     items: [
       'undo',
       'redo',
-      'alignment',
-      'sourceEditing',
       '|',
       'heading',
-      'fontSize',
-      'fontColor',
-      'fontBackgroundColor',
       '|',
       'bold',
-      'underline',
       'italic',
-      'strikethrough',
+      'underline',
       '|',
       'numberedList',
       'bulletedList',
       '|',
       'link',
-      'insertImage',
-      'insertTable',
       '|',
+      'sourceEditing',
       'findAndReplace',
-      'textPartLanguage'
+      '|',
+      'alignment',
+      'fontSize',
+      'fontColor'
     ],
     shouldNotGroupWhenFull: true
   },
@@ -166,4 +169,4 @@ const editorConfig =  {
   
 }
 
-export default editorConfig
+export default editorConfig;
